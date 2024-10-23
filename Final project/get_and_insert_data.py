@@ -11,31 +11,9 @@ def clean_description(description):
     clean = re.compile('<.*?>')
     return re.sub(clean, '', description)
 
-def fetch_multiple_page(numPage):
+def fetch_multiple_page(query, numPage):
     
     url = 'https://graphql.anilist.co'
-
-    query = '''
-    query ($page: Int, $perPage: Int) {
-        Page(page: $page, perPage: $perPage) {
-            pageInfo {
-                total
-                currentPage
-                lastPage
-                hasNextPage
-                perPage
-            }
-            media(sort: POPULARITY_DESC) {
-                id
-                title {
-                    romaji
-                }
-                description
-                genres
-            }
-        }
-    }
-    '''
 
     media_info = []
 
@@ -90,7 +68,30 @@ def insert_into_database(media_info):
     return
 
 def main():
-    media_info = fetch_multiple_page(2)
+    query = '''
+    query ($page: Int, $perPage: Int) {
+        Page(page: $page, perPage: $perPage) {
+            pageInfo {
+                total
+                currentPage
+                lastPage
+                hasNextPage
+                perPage
+            }
+            media(sort: POPULARITY_DESC) {
+                id
+                title {
+                    romaji
+                }
+                description
+                genres
+            }
+        }
+    }
+    '''
+
+    media_info = fetch_multiple_page(query,2)
+
     insert_into_database(media_info)
 
     subprocess.run([r'C:\Program Files\MySQL\MySQL Workbench 8.0 CE\MySQLWorkbench.exe'])

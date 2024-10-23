@@ -143,7 +143,7 @@ def calculate_idf(term_sets):
 def main():
 
     # Example usage
-    filename = './/Final project//test.csv'  
+    filename = './/test.csv'  
     samples = read_csv_to_list(filename)
     samples = [sample[0] for sample in samples]
 
@@ -157,10 +157,6 @@ def main():
 
     # Clean descriptions by removing HTML tags and common symbols
     descriptions = [clean_description(description) for description in descriptions]
-    
-    print(descriptions[102])
-    input("enter")
-
 
     # Process the cleaned descriptions to generate term sets, term list, term map, and count maps
     term_sets, terms, term_map, count_maps = process_data(descriptions)
@@ -273,13 +269,12 @@ def main():
                     vec_j = tf_idf_matrix[:, id_j]  # TF-IDF vector of article j
                     cossim = np.dot(vec_i.T, vec_j)[0, 0]  # Calculate cosine similarity
                     print(id_i, id_j, cossim)
-                    print(titles[id_i])  # Print the title of the first article
-                    print(titles[id_j])  # Print the title of the second article
+                    # print(titles[id_i])  # Print the title of the first article
+                    # print(titles[id_j])  # Print the title of the second article
 
-    input("enter")
     # Select a random article as the query
     column_index = random.choice(list(range(n_columns)))
-    column_index = 40
+    column_index = 100
 
     query_vector = tf_idf_matrix[:, column_index]  # Get the TF-IDF vector of the query article
     query_signature = signature_matrix[:, column_index]  # Get the LSH signature of the query article
