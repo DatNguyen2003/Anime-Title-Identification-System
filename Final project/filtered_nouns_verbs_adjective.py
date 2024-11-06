@@ -3,6 +3,9 @@ import nltk
 from nltk.tokenize import word_tokenize
 from nltk import pos_tag
 
+from helper import pack_str, unpack_str
+
+
 def process_text_files(input_file, output_directory):
     """
     Reads from an input text file, extracts nouns, verbs, and adjectives,

@@ -3,7 +3,7 @@ import subprocess
 import requests
 import re
 
-from run_sql import run_sql
+from helper_sql import close_databse, connect_init_database, run_sql
 
 def clean_description(description):
     if description is None:
@@ -30,20 +30,9 @@ def fetch_multiple_page(query, numPage):
 
     return media_info
 
-def insert_into_database(media_info):
-    initial_config = {
-        'user': 'root',  
-        'password': '2003',  
-        'host': 'localhost'
-    }
-    
-    conn = mysql.connector.connect(**initial_config)
-    cursor = conn.cursor()
 
-    run_sql('create_db.sql' ,conn, cursor)
 
-    conn.database = 'anime_db'
-
+def insert_into_database(media_info, conn, cursor):
     for media in media_info:
         print(f"ID: {media['id']}")
         print(f"Title (Romaji): {media['title']['romaji']}")
@@ -62,9 +51,6 @@ def insert_into_database(media_info):
             ''', (media['id'], genre))
 
     conn.commit()
-
-    cursor.close()
-    conn.close()
     return
 
 def main():
@@ -91,8 +77,9 @@ def main():
     '''
 
     media_info = fetch_multiple_page(query,2)
-
-    insert_into_database(media_info)
+    conn, cursor = connect_init_database()
+    insert_into_database(media_info, conn, cursor)
+    close_databse(conn, cursor)
 
     subprocess.run([r'C:\Program Files\MySQL\MySQL Workbench 8.0 CE\MySQLWorkbench.exe'])
 

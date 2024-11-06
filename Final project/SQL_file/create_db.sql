@@ -16,3 +16,12 @@ CREATE TABLE IF NOT EXISTS genres (
     genre VARCHAR(100),                       
     FOREIGN KEY (anime_id) REFERENCES anime(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS animes (
+    ID INT PRIMARY KEY,
+    Title VARCHAR(255),
+    Recap TEXT,
+    Noun TEXT,
+    Verb TEXT,
+    Adj TEXT
+)

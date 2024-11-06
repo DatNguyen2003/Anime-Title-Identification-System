@@ -1,69 +1,33 @@
-import requests
-import json
 import re
 
-# Function to clean HTML tags from the description
-def clean_description(description):
-    if description is None:
-        return "No description available"  # Handle NoneType description
-    clean = re.compile('<.*?>')
-    return re.sub(clean, '', description)
+def filter_text_and_remove_custom_stopwords(text):
+    # Remove all characters except letters and spaces
+    cleaned_text = re.sub(r'[^A-Za-z\s]', '', text)
+    
+    # Define stopwords as a regular expression pattern
+    stopwords = r'\b(' + '|'.join([
+        'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 
+        'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 
+        'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 
+        'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 
+        'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 
+        'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 
+        'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 
+        'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 
+        'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 
+        'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 
+        'don', 'should', 'now'
+    ]) + r')\b'
 
+    # Remove stopwords
+    result = re.sub(stopwords, '', cleaned_text, flags=re.IGNORECASE)
+    
+    # Remove extra spaces from the result
+    result = re.sub(r'\s+', ' ', result).strip()
+    
+    return result
 
-# GraphQL query to get all media information (ID, title, description, genres)
-query = '''
-query ($page: Int, $perPage: Int) {
-    Page(page: $page, perPage: $perPage) {
-        pageInfo {
-            total
-            currentPage
-            lastPage
-            hasNextPage
-            perPage
-        }
-        media(sort: POPULARITY_DESC) {
-            id
-            title {
-                romaji
-            }
-            description
-            genres
-        }
-    }
-}
-'''
-variables = {
-    "page": 1,
-    "perPage": 100
-}
-
-
-# API URL
-url = 'https://graphql.anilist.co'
-
-# Fetch the first page to get the total number of items
-response = requests.post(url, json={'query': query, 'variables': variables})
-data = response.json()
-
-# Get the total number of items
-total_items = data['data']['Page']['pageInfo']['total']
-print(f"Total items found: {total_items}")
-
-# Update 'perPage' to total number of items to fetch all results in one go
-variables['perPage'] = total_items
-
-# Fetch all data in one request
-response = requests.post(url, json={'query': query, 'variables': variables})
-data = response.json()
-
-# Pretty print the entire response for debugging
-# print(json.dumps(data, indent=2))
-
-# Access and print media details including description and genres
-media_info = data['data']['Page']['media']
-for media in media_info:
-    print(f"ID: {media['id']}")
-    print(f"Title (Romaji): {media['title']['romaji']}")
-    print(f"Description: {clean_description(media['description'])}")
-    print(f"Genres: {', '.join(media['genres'])}")
-    print('-' * 80)  # Separator between entries
+# Example usage
+text = "Hello World! This is a Test of filtering out stopwords like the and in."
+filtered_text = filter_text_and_remove_custom_stopwords(text)
+print("Filtered text:", filtered_text)
