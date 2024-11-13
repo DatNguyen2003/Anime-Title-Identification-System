@@ -47,22 +47,16 @@ def fetch_anime_data():
 
     # Execute a SQL query to select anime data, including titles, descriptions, and genres
     cursor.execute('''
-    SELECT a.id, a.title_romaji, a.description, GROUP_CONCAT(g.genre) AS genres
-    FROM anime a
-    LEFT JOIN genres g ON a.id = g.anime_id
-    GROUP BY a.id;
+    SELECT ID, Title, Recap, Genres
+    FROM animes 
     ''')
 
     # Fetch all results from the executed query
     anime_data = cursor.fetchall()
 
-    # Close the cursor to release database resources
     cursor.close()
-    
-    # Close the database connection
     conn.close()
 
-    # Return the fetched anime data
     return anime_data
 
 def clean_description(description):
@@ -143,7 +137,8 @@ def calculate_idf(term_sets):
 def main():
 
     # Example usage
-    filename = './/test.csv'  
+    filename = './/test.csv' 
+    filename = './/Final project//test.csv'  
     samples = read_csv_to_list(filename)
     samples = [sample[0] for sample in samples]
 

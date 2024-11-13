@@ -30,58 +30,46 @@ def fetch_multiple_page(query, numPage):
 
     return media_info
 
-
-
 def insert_into_database(media_info, conn, cursor):
     for media in media_info:
         print(f"ID: {media['id']}")
-        print(f"Title (Romaji): {media['title']['romaji']}")
+        print(f"Title (English): {media['title']['english']}")
         print(f"Description: {clean_description(media['description'])}")
         print(f"Genres: {', '.join(media['genres'])}")
         print('-' * 80)  
         cursor.execute('''
-        INSERT IGNORE INTO anime (id, title_romaji, description)
-        VALUES (%s, %s, %s)
-        ''', (media['id'], media['title']['romaji'], clean_description(media.get('description'))))
-
-        for genre in media.get('genres', []):  
-            cursor.execute('''
-            INSERT IGNORE INTO genres (anime_id, genre)
-            VALUES (%s, %s)
-            ''', (media['id'], genre))
+        INSERT IGNORE INTO animes (ID, Title, Recap, Genres)
+        VALUES (%s, %s, %s, %s)
+        ''', (media['id'], media['title']['english'], clean_description(media.get('description')), ', '.join(media['genres'])))
 
     conn.commit()
     return
 
-def main():
-    query = '''
-    query ($page: Int, $perPage: Int) {
-        Page(page: $page, perPage: $perPage) {
-            pageInfo {
-                total
-                currentPage
-                lastPage
-                hasNextPage
-                perPage
+query = '''
+query ($page: Int, $perPage: Int) {
+    Page(page: $page, perPage: $perPage) {
+        pageInfo {
+            total
+            currentPage
+            lastPage
+            hasNextPage
+            perPage
+        }
+        media(sort: POPULARITY_DESC) {
+            id
+            title {
+                english
             }
-            media(sort: POPULARITY_DESC) {
-                id
-                title {
-                    romaji
-                }
-                description
-                genres
-            }
+            description
+            genres
         }
     }
-    '''
+}
+'''
 
-    media_info = fetch_multiple_page(query,2)
-    conn, cursor = connect_init_database()
-    insert_into_database(media_info, conn, cursor)
-    close_databse(conn, cursor)
+media_info = fetch_multiple_page(query,2)
+conn, cursor = connect_init_database()
+insert_into_database(media_info, conn, cursor)
+close_databse(conn, cursor)
 
-    subprocess.run([r'C:\Program Files\MySQL\MySQL Workbench 8.0 CE\MySQLWorkbench.exe'])
-
-if __name__ == "__main__":
-    main()
+subprocess.run([r'C:\Program Files\MySQL\MySQL Workbench 8.0 CE\MySQLWorkbench.exe'])

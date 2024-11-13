@@ -1,33 +1,51 @@
-import re
+import requests
 
-def filter_text_and_remove_custom_stopwords(text):
-    # Remove all characters except letters and spaces
-    cleaned_text = re.sub(r'[^A-Za-z\s]', '', text)
-    
-    # Define stopwords as a regular expression pattern
-    stopwords = r'\b(' + '|'.join([
-        'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 
-        'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 
-        'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 
-        'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 
-        'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 
-        'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 
-        'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 
-        'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 
-        'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 
-        'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 
-        'don', 'should', 'now'
-    ]) + r')\b'
+def get_wikipedia_sections(query):
+    # Step 1: Search for the most relevant page
+    search_url = "https://en.wikipedia.org/w/api.php"
+    search_params = {
+        "action": "query",
+        "list": "search",
+        "srsearch": query,
+        "format": "json"
+    }
 
-    # Remove stopwords
-    result = re.sub(stopwords, '', cleaned_text, flags=re.IGNORECASE)
-    
-    # Remove extra spaces from the result
-    result = re.sub(r'\s+', ' ', result).strip()
-    
-    return result
+    try:
+        # Perform the search query to get the most relevant page
+        search_response = requests.get(search_url, params=search_params)
+        search_response.raise_for_status()
+        search_data = search_response.json()
 
-# Example usage
-text = "Hello World! This is a Test of filtering out stopwords like the and in."
-filtered_text = filter_text_and_remove_custom_stopwords(text)
-print("Filtered text:", filtered_text)
+        # Check if there are search results
+        if 'query' in search_data and 'search' in search_data['query'] and len(search_data['query']['search']) > 0:
+            # Get the title of the most relevant page
+            page_title = search_data['query']['search'][0]['title']
+            print(f"Most relevant page found: {page_title}")
+        else:
+            print("No relevant pages found.")
+            return []
+
+        # Step 2: Retrieve sections from the most relevant page
+        url = "https://en.wikipedia.org/w/api.php"
+        params = {
+            "action": "parse",
+            "page": page_title,
+            "prop": "sections",
+            "format": "json"
+        }
+
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
+
+        # Return list of sections with their titles and IDs
+        if 'parse' in data and 'sections' in data['parse']:
+            return data['parse']['sections']
+        else:
+            return []
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching sections for {query}: {e}")
+        return []
+
+get_wikipedia_sections("The Future Diary")
