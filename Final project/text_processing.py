@@ -1,9 +1,7 @@
 import re
-import nltk
 from bs4 import BeautifulSoup
-from nltk.tokenize import word_tokenize
-from nltk import pos_tag
-
+from nltk import word_tokenize, pos_tag, ne_chunk
+import spacy
 
 def filter_nouns_verbs_adjs(text):
     tokens = word_tokenize(text)
@@ -32,7 +30,7 @@ def remove_custom_stopwords(text):
         'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 
         'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 
         'don', 'should', 'now','episode','Episode','episodes','Episodes','title','Title','list','List',
-        'Directed','airdate','Animation','Original','Season','Japanese'
+        'Directed','airdate','Animation','Original','Season','Japanese','edit','Main','article',
     ]) + r')\b'
 
     # Remove stopwords
@@ -57,3 +55,35 @@ def strip_html(raw_html):
     soup = BeautifulSoup(raw_html, 'html.parser')
     text = soup.get_text(separator="\n")
     return text
+
+def process_text_nltk(text):
+    # Tokenize and POS tag the text
+    tokens = word_tokenize(text)
+    tagged_tokens = pos_tag(tokens)
+
+    # Separate nouns, verbs, and adjectives
+    nouns = [word for word, pos in tagged_tokens if pos.startswith('NN')]
+    verbs = [word for word, pos in tagged_tokens if pos.startswith('VB')]
+    adjectives = [word for word, pos in tagged_tokens if pos.startswith('JJ')]
+
+    # Named Entity Recognition (NER)
+    chunks = ne_chunk(tagged_tokens)
+    names = [chunk[0] for chunk in chunks if hasattr(chunk, 'label') and chunk.label() == 'PERSON']
+    names = [name[0] for name in names]
+
+    return nouns, verbs, adjectives, names
+
+def process_text_spacy(text):
+    nlp = spacy.load("en_core_web_sm")
+    # Process the text
+    doc = nlp(text)
+
+    # Separate nouns, verbs, and adjectives
+    nouns = [token.text for token in doc if token.pos_ == "NOUN"]
+    verbs = [token.text for token in doc if token.pos_ == "VERB"]
+    adjectives = [token.text for token in doc if token.pos_ == "ADJ"]
+
+    # Find names classified as PERSON
+    names = [ent.text for ent in doc.ents if ent.label_ == "PERSON"]
+
+    return nouns, verbs, adjectives, names

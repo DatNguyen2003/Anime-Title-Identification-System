@@ -3,7 +3,7 @@ import subprocess
 import requests
 import re
 
-from helper_sql import close_databse, connect_init_database, run_sql
+from helper_sql import *
 
 def clean_description(description):
     if description is None:
@@ -38,10 +38,14 @@ def insert_into_database(media_info, conn, cursor):
         print(f"Genres: {', '.join(media['genres'])}")
         print('-' * 80)  
         cursor.execute('''
-        INSERT IGNORE INTO animes (ID, Title, Recap, Genres)
+        INSERT IGNORE INTO animes_nltk (ID, Title, Recap, Genres)
         VALUES (%s, %s, %s, %s)
         ''', (media['id'], media['title']['english'], clean_description(media.get('description')), ', '.join(media['genres'])))
 
+        cursor.execute('''
+        INSERT IGNORE INTO animes_spacy (ID, Title, Recap, Genres)
+        VALUES (%s, %s, %s, %s)
+        ''', (media['id'], media['title']['english'], clean_description(media.get('description')), ', '.join(media['genres'])))
     conn.commit()
     return
 

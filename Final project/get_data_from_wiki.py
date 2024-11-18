@@ -1,13 +1,13 @@
 import requests
-from text_processing import filter_nouns_verbs_adjs, remove_custom_stopwords, clean_text, strip_html
-from helper_sql import close_databse, connect_database, pack_str
+from text_processing import *
+from helper_sql import *
 
 desired_sections = ["Summary", "Plot", "Characters", "Music", "Episode list", "Episodes"]
 
 def fetch_anime_title(conn, cursor):
     cursor.execute('''
     SELECT Title
-    FROM animes 
+    FROM animes_nltk 
     ''')
 
     anime_data = cursor.fetchall()
@@ -104,17 +104,33 @@ def search_and_retrieve_episode_list(titles, conn, cursor):
             content = get_section_content(new_query, section_id)
             preview = content[:400] + "..." if content else "No content available"
             content = remove_custom_stopwords(content)
-            nouns, verbs, adjectives = filter_nouns_verbs_adjs(content)
             data[section] = content
 
+            # Using NLTK
+            nouns, verbs, adjectives, names = process_text_nltk(content)
             cursor.execute('''
-            UPDATE animes
+            UPDATE animes_nltk
             SET 
                 Noun = %s,
                 Verb = %s,
-                Adj = %s
+                Adj = %s,
+                NA = %s           
             WHERE Title = %s;
-            ''', (pack_str(nouns), pack_str(verbs), pack_str(adjectives), title))
+            ''', (pack_str(nouns), pack_str(verbs), pack_str(adjectives), pack_str(names), title))
+
+            conn.commit()
+            
+            # Using spacy
+            nouns, verbs, adjectives, names = process_text_spacy(content)
+            cursor.execute('''
+            UPDATE animes_spacy
+            SET 
+                Noun = %s,
+                Verb = %s,
+                Adj = %s,
+                NA = %s
+            WHERE Title = %s;
+            ''', (pack_str(nouns), pack_str(verbs), pack_str(adjectives), pack_str(names), title))
 
             conn.commit()
             print("Data inserted to database!")

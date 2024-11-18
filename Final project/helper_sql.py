@@ -1,19 +1,6 @@
 import mysql.connector
 import os
 
-# def run_sql(sql_file_name, conn, cursor):
-
-#     sql_file_path = os.path.join('Final project//SQL_file', sql_file_name)
-
-#     with open(sql_file_path, 'r') as sql_file:
-#         sql_script = sql_file.read()
-
-#     for statement in sql_script.split(';'):
-#         if statement.strip():
-#             cursor.execute(statement)
-    
-#     conn.commit()
-
 def run_sql(sql_file_name, conn, cursor):
     # Use os.path.join to construct the file path in a platform-independent way
     base_dir = os.path.dirname(__file__)  # Get the current script directory
