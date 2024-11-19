@@ -1,5 +1,5 @@
 import math
-
+from sklearn.decomposition import TruncatedSVD
 import numpy as np
 
 def process_data(inputs):
@@ -95,4 +95,56 @@ def find_sim_can(inputs, titles, num_sample):
 
         samples_candidates.append((query_index, candidates))
     
+    return samples_candidates
+
+
+
+
+def find_sim_can_svd(inputs, titles, num_sample, n_components):
+    term_sets, terms, term_map, count_maps = process_data(inputs)
+    idf_weights = calculate_idf(term_sets)
+
+    # Construct the TF-IDF matrix
+    n_documents = len(term_sets)
+    n_terms = len(terms)
+
+    # Initialize and populate the term-document matrix
+    tf_matrix = np.zeros((n_terms, n_documents))
+    for i, term_set in enumerate(term_sets):
+        for term in term_set:
+            term_index = term_map[term]
+            tf_matrix[term_index, i] = count_maps[i][term]
+
+    # Normalize term frequencies (TF normalization)
+    tf_matrix = tf_matrix / tf_matrix.sum(axis=0)
+
+    # Calculate the TF-IDF matrix
+    idf_vector = np.array([idf_weights[term] for term in terms])
+
+    # Tile the IDF vector to match the size of the term count matrix
+    idf_matrix = np.tile(idf_vector, (len(term_sets), 1))
+
+    # Compute the TF-IDF matrix by multiplying the term frequency matrix with the IDF matrix
+    tf_idf_matrix = np.multiply(tf_matrix, idf_matrix.T)
+
+    # Normalize columns (document vectors) in TF-IDF matrix
+    tf_idf_matrix = tf_idf_matrix / np.linalg.norm(tf_idf_matrix, axis=0)
+
+    # Apply SVD to reduce dimensions
+    svd = TruncatedSVD(n_components)
+    reduced_matrix = svd.fit_transform(tf_idf_matrix.T)  # Transpose for SVD
+
+    samples_candidates = []
+
+    for query_index in range(len(titles) - num_sample, len(titles)):
+        query_vector = reduced_matrix[query_index]
+        candidates = []
+        for i in range(reduced_matrix.shape[0]):
+            similarity = np.dot(query_vector, reduced_matrix[i]) / (
+                np.linalg.norm(query_vector) * np.linalg.norm(reduced_matrix[i])
+            )
+            candidates.append((i, similarity))
+
+        samples_candidates.append((query_index, sorted(candidates, key=lambda x: x[1], reverse=True)))
+
     return samples_candidates

@@ -74,7 +74,7 @@ def eval(noun, verb, adj, name):
     return 10 *noun + 1*verb + 1*adj + 30*name
 
 
-filename = './tesing.csv'   
+filename = './tesing2.csv'   
 samples = read_csv_to_list(filename)
 
 samples_titles = [sample[0] for sample in samples]
@@ -100,10 +100,15 @@ for sample in samples:
     spacy_adjs.append(spacy_adj)
     spacy_names.append(spacy_name)
 
-nltk_noun_sim = find_sim_can(nltk_nouns, titles, len(samples_titles))
-nltk_verb_sim = find_sim_can(nltk_verbs, titles, len(samples_titles))
-nltk_adj_sim = find_sim_can(nltk_adjs, titles, len(samples_titles))
+# nltk_noun_sim = find_sim_can(nltk_nouns, titles, len(samples_titles))
+# nltk_verb_sim = find_sim_can(nltk_verbs, titles, len(samples_titles))
+# nltk_adj_sim = find_sim_can(nltk_adjs, titles, len(samples_titles))
 nltk_name_sim = find_sim_can(nltk_names, titles, len(samples_titles))
+
+nltk_noun_sim = find_sim_can_svd(nltk_nouns, titles, len(samples_titles), 10)
+nltk_verb_sim = find_sim_can_svd(nltk_verbs, titles, len(samples_titles), 10)
+nltk_adj_sim = find_sim_can_svd(nltk_adjs, titles, len(samples_titles), 10)
+# nltk_name_sim = find_sim_can_svd(nltk_names, titles, len(samples_titles), 75)
 
 result = []
 for i in range(0, len(samples_titles)):
@@ -116,10 +121,10 @@ for i in range(0, len(samples_titles)):
         adj_sim = nltk_adj_sim[i][1][j][1]
         name_sim = nltk_name_sim[i][1][j][1]
 
-        # sim = eval(noun_sim, verb_sim, adj_sim, name_sim)
+        sim = eval(noun_sim, verb_sim, adj_sim, name_sim)
         # sim = eval(noun_sim, noun_sim, noun_sim, noun_sim)
         # sim = eval(verb_sim, verb_sim, verb_sim, verb_sim)
-        sim = eval(adj_sim, adj_sim, adj_sim, adj_sim)
+        # sim = eval(adj_sim, adj_sim, adj_sim, adj_sim)
         candidates.append((j, sim))
     top_candidates = sorted(candidates, key=lambda x: x[1], reverse=True)[:10]
 
@@ -136,10 +141,15 @@ for i in range(0, len(samples_titles)):
 
 nltk_acc = sum(result)/len(result)
 
-spacy_noun_sim = find_sim_can(spacy_nouns, titles, len(samples_titles))
-spacy_verb_sim = find_sim_can(spacy_verbs, titles, len(samples_titles))
-spacy_adj_sim = find_sim_can(spacy_adjs, titles, len(samples_titles))
+# spacy_noun_sim = find_sim_can(spacy_nouns, titles, len(samples_titles))
+# spacy_verb_sim = find_sim_can(spacy_verbs, titles, len(samples_titles))
+# spacy_adj_sim = find_sim_can(spacy_adjs, titles, len(samples_titles))
 spacy_name_sim = find_sim_can(spacy_names, titles, len(samples_titles))
+
+spacy_noun_sim = find_sim_can_svd(spacy_nouns, titles, len(samples_titles), 10)
+spacy_verb_sim = find_sim_can_svd(spacy_verbs, titles, len(samples_titles), 10)
+spacy_adj_sim = find_sim_can_svd(spacy_adjs, titles, len(samples_titles), 10)
+# spacy_name_sim = find_sim_can_svd(spacy_names, titles, len(samples_titles), 75)
 
 result = []
 for i in range(0, len(samples_titles)):
@@ -152,10 +162,10 @@ for i in range(0, len(samples_titles)):
         adj_sim = spacy_adj_sim[i][1][j][1]
         name_sim = spacy_name_sim[i][1][j][1]
 
-        # sim = eval(noun_sim, verb_sim, adj_sim, name_sim)
+        sim = eval(noun_sim, verb_sim, adj_sim, name_sim)
         # sim = eval(noun_sim, noun_sim, noun_sim, noun_sim)
         # sim = eval(verb_sim, verb_sim, verb_sim, verb_sim)
-        sim = eval(adj_sim, adj_sim, adj_sim, adj_sim)
+        # sim = eval(adj_sim, adj_sim, adj_sim, adj_sim)
         candidates.append((j, sim))
     top_candidates = sorted(candidates, key=lambda x: x[1], reverse=True)[:10]
 
